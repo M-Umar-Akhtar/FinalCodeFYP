@@ -1,19 +1,22 @@
 const mongooose = require("mongoose");
 
 const propertyySchema = new mongooose.Schema({
-    email:{ type: String, required: true, unique: true },
+    email:String,
     purpose:String,
     type:String,
     city:String,
+    address:String,
     area:Number,
     unit:String,
     price:Number,
+    rooms: Number,
+    bath: Number,
+    floors: Number,
     installment:Boolean,
     description:String,
-    image:Buffer,
-    panorama:Buffer,
-    latitude: Number,
-    longitude: Number,
+    image:[{ type: String }],
+    panorama:[{ type: String }],
+    agent:Boolean,
 });
 
 const property = mongooose.model('PROPERTIES',propertyySchema);

@@ -3,26 +3,28 @@ import "../Components/Assets/css/addproperty.css";
 import Header from '../Components/Header.js'
 import Footer from '../Components/Footer';
 import { useState } from 'react';
+import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 export default function Addproperty() {
 
   const [name, setname] = useState("Home");
   const [selectedOption, setSelectedOption] = useState('');
   const [property, setProperty] = useState({
-    email: "",
     purpose: "",
-    type: "",
+    type: "Home",
     city: "",
+    address: "",
     area: 0,
     unit: "marla",
     price: 0,
     rooms: 0,
     bath: 0,
     floors: 0,
+    image: [],
+    panorama: [],
     installment: false,
     description: "",
-    latitude: 0,
-    longitude: 0,
+    agent: false,
   });
 
   const handleChange = (e) => {
@@ -31,6 +33,22 @@ export default function Addproperty() {
       [e.target.name]: e.target.value
     });
   };
+  const handleChangeImage = (e) => {
+    const fileList = Array.from(e.target.files);
+    const encodedImages = [];
+
+    fileList.forEach((file) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        encodedImages.push(reader.result);
+      };
+    });
+    setProperty({
+      ...property,
+      [e.target.name]: encodedImages
+    });
+  }
   const handleChangeRadio = (e) => {
     setSelectedOption(e.target.value);
     setProperty({
@@ -44,9 +62,27 @@ export default function Addproperty() {
       [e.target.name]: e.target.checked
     });
   };
+  let navigate = useNavigate();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    console.log(property);
+    try {
+      const response = await axios.post('http://localhost:3001/property', property);
+      //const { token } = response.data;
+
+      // Store the token in local storage or a cookie, depending on your implementation
+      navigate("/view");
+      // Redirect the user to the dashboard or protected page
+      // You can use a router library like react-router-dom for this
+      // Example: history.push('/dashboard');
+    } catch (error) {
+      console.error('Error saving property:', error);
+      // Handle login error, display error message, etc.
+    }
+  };
 
   function Button() {
-    
+
   }
 
 
@@ -56,7 +92,7 @@ export default function Addproperty() {
         <>
           <div className="sell  " >
             <label className="label">
-              <input type="radio" name="type" value="Home"  checked={selectedOption === 'Home'} onChange={handleChangeRadio} onClick={() => { Button() }} />
+              <input type="radio" name="type" value="Home" checked={selectedOption === 'Home'} onChange={handleChangeRadio} onClick={() => { Button() }} />
               Home
             </label>
             <label className="label">
@@ -75,10 +111,10 @@ export default function Addproperty() {
           <div className='type'>
             <h2>Rooms and Bathrooms </h2>
             <div>
-              <input type="number" id="city-input" list="none" placeholder={"Room(s)"} />
+              <input type="number" id="city-input" list="none" placeholder={"Room(s)"} name="rooms" onChange={handleChange} />
             </div>
             <div className='mt-4 '>
-              <input type="number" id="city-input" list="none" placeholder={"Bathroom(s)"} />
+              <input type="number" id="city-input" list="none" placeholder={"Bathroom(s)"} name="bath" onChange={handleChange} />
             </div>
           </div>
         </>
@@ -110,7 +146,7 @@ export default function Addproperty() {
           <div className='type'>
             <h2>Floors</h2>
             <div>
-              <input type="number" id="city-input" list="none" placeholder={"Floor(s)"} />
+              <input type="number" id="city-input" list="none" placeholder={"Floor(s)"} name="floors" onChange={handleChange} />
             </div>
           </div>
         </>
@@ -127,7 +163,7 @@ export default function Addproperty() {
     <div>
 
       <Header page={4} />
-      <form>
+      <form onSubmit={handleSubmit}>
         <div class="main container">
           <h1>Purpose </h1>
           <div class="location container">
@@ -168,7 +204,7 @@ export default function Addproperty() {
               Area Size
             </h2>
             <div className='flex '>
-              <input type="number" id="city-input" list="none" placeholder={"Area"} name="area" onChange={handleChange}/>
+              <input type="number" id="city-input" list="none" placeholder={"Area"} name="area" onChange={handleChange} />
 
               <select name="unit" id="cars" onChange={handleChange}>
                 <option value="marla">marla</option>
@@ -177,12 +213,12 @@ export default function Addproperty() {
               </select>
             </div>
 
-            
+
             <div className='flex mt-4 '>
-            <h2>
-              Price
-            </h2>
-              <input type="text" id="city-input" list="none" placeholder={"Price"} name="price" onChange={handleChange}/>
+              <h2>
+                Price
+              </h2>
+              <input type="text" id="city-input" list="none" placeholder={"Price"} name="price" onChange={handleChange} />
 
               <select name="price" id="cars" >
                 <option value="pkr">pkr</option>
@@ -195,7 +231,7 @@ export default function Addproperty() {
               </div>
 
               <div class="form-check form-switch mt-4">
-                <input class="form-check-input" type="checkbox" id="flexSwitchCheckDefault" name="area" onChange={handleCheckboxChange}/>
+                <input class="form-check-input" type="checkbox" id="flexSwitchCheckDefault" name="installment" onChange={handleCheckboxChange} />
               </div>
             </div>
             <div className='d-flex flex-row justify-content-between  mt-4'>
@@ -240,13 +276,16 @@ export default function Addproperty() {
 
 
           <div class="location container">
-            <div className='ImagePanorama'>
+            <div >
               <div >
                 <h3 className='mt-3'>Add Images</h3>
                 <div className='uploadimage  container m-5  p-4 '>
                   <div className='sizeimage '>
-                    <button className='btn primary m-3 '>Add Images</button>
-                    <label>Max size 10MB , .JPJ , .PNG  </label>
+                    <label for="images" class="drop-container">
+                      <span class="drop-title">Drop files here</span>
+                      or
+                      <input type="file" id="images" accept="image/*" name="image" required multiple onChange={handleChangeImage} />
+                    </label>
                   </div>
                 </div>
               </div>
@@ -254,15 +293,25 @@ export default function Addproperty() {
                 <h3 className='mt-3'>Add Panorama </h3>
                 <div className='uploadimage  container m-5  p-4 '>
                   <div className='sizeimage '>
-                    <button className='btn primary m-3 '>Add Images</button>
-                    <label>Max size 10MB , .JPJ , .PNG  </label>
+                    <label for="panoramas" class="drop-container">
+                      <span class="drop-title">Drop files here</span>
+                      or
+                      <input type="file" id="panoramas" accept="image/*" name="panorama" required multiple onChange={handleChangeImage} />
+                    </label>
                   </div>
                 </div>
               </div>
+            </div>
+            <div className='d-flex flex-row justify-content-between  mt-4' style={{ width: "85%" }}>
+              <div >
+                <h2>Hire Agent with 360 camera</h2>
+                <p>Enable if you want to see better results of the virtual tour.</p>
+                <p>Agent fee would be discussed later.</p>
+              </div>
 
-
-
-             
+              <div class="form-check form-switch mt-4">
+                <input class="form-check-input" type="checkbox" id="flexSwitchCheckDefault" name="agent" onChange={handleCheckboxChange} />
+              </div>
             </div>
 
           </div>
@@ -288,27 +337,14 @@ export default function Addproperty() {
             </div>
             <h3 className='mt-3'>Address</h3>
 
-            <input type="text" id="city-input" name="city" list="city-options" placeholder={"Enter the location "} />
+            <input type="text" id="city-input" name="address" list="city-options" placeholder={"Enter the location "} onChange={handleChange} />
 
-            <h4 className='mt-4'>
-              <span class="glyphicon glyphicon-map-marker"></span>{" "}
-              Location
-            </h4>
-            <div class="well">
-              <iframe
-                width="700px"
-                height="350"
-                frameborder="0"
-                scrolling="no"
-                marginheight="0"
-                marginwidth="0"
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3318.895737781036!2d73.03973794999999!3d33.711646699999996!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x38dfbe52c55156f9%3A0x2ef246a5e0f7f790!2sF-8%20Markaz%20F%208%20Markaz%20F-8%2C%20Islamabad%2C%20Islamabad%20Capital%20Territory!5e0!3m2!1sen!2s!4v1671696371010!5m2!1sen!2s"
-              ></iframe>
-            </div>
+
+
 
 
           </div>
-
+          <button class="btn" style={{ left: "80%" }}>List Property</button>
 
         </div>
       </form>
